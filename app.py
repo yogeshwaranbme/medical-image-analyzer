@@ -219,11 +219,30 @@ with tab2:
                         st.markdown(f"### 📝 Medical Breakdown ({selected_lang_name}):")
                         st.info(insights_text)
 
-# Generate Voice
-voice_file_path = analyzer.text_to_speech(insights_text, target_lang_code)
-if voice_file_path and os.path.exists(voice_file_path):
-    st.markdown("### 🔊 Interactive Voice Assistant Playback:")
-    st.audio(voice_file_path, format="audio/mp3")
-    st.success(f"Execution complete. Output successfully processed in {selected_lang_name}.")
-    os.remove(voice_file_path)
-else:st.info("Upload a patient laboratory image file to initiate tracking modules.")
+# ---------------------------------------------------------------------
+# FIX: Ensure 'analyzer' is declared immediately inside the button logic
+# ---------------------------------------------------------------------
+if st.button("🚀 Analyze Report & Synthesize Audio"):
+    with st.spinner("Processing medical text data and generating voice file..."):
+        
+        # 1. Load the raw uploaded file buffer from RAM into Pillow image format
+        report_image = Image.open(uploaded_report)
+        
+        # 2. INSTANTIATE THE CLASS OBJECT HERE (This defines the missing variable)
+        analyzer = LabReportAnalyzer(st.session_state["OPENROUTER_API_KEY"])
+        
+        # 3. Request the OpenRouter Multimodal endpoint for medical insights
+        insights_text = analyzer.analyze_report_image(report_image, selected_lang_name)
+        
+        # 4. Display the dynamic text breakdown output on the user dashboard
+        st.markdown(f"### 📝 Medical Breakdown ({selected_lang_name}):")
+        st.info(insights_text)
+        
+        # 5. Execute the gTTS accessibility synthesis script 
+        voice_file_path = analyzer.text_to_speech(insights_text, target_lang_code)
+        
+        if voice_file_path and os.path.exists(voice_file_path):
+            st.markdown("### 🔊 Interactive Voice Assistant Playback:")
+            st.audio(voice_file_path, format="audio/mp3")
+            st.success(f"Execution complete. Output successfully processed in {selected_lang_name}.")
+            os.remove(voice_file_path)
