@@ -1,5 +1,5 @@
 streamlit
-google-generativeai
+openai
 gTTS
 numpy
 opencv-python-headless
