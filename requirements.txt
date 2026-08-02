@@ -1,6 +1,7 @@
 streamlit
+google-generativeai
+gTTS
 numpy
 opencv-python-headless
-pillow
+Pillow
 scikit-image
-
