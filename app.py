@@ -220,4 +220,10 @@ with tab2:
                         st.info(insights_text)
 
 # Generate Voice
-voice_file_path = analyzer.text_to_speech(insights_text, target_lang_code)if voice_file_path and os.path.exists(voice_file_path):st.markdown("### 🔊 Interactive Voice Assistant Playback:")st.audio(voice_file_path, format="audio/mp3")st.success(f"Execution complete. Output successfully processed in {selected_lang_name}.")os.remove(voice_file_path)else:st.info("Upload a patient laboratory image file to initiate tracking modules.")
+voice_file_path = analyzer.text_to_speech(insights_text, target_lang_code)
+if voice_file_path and os.path.exists(voice_file_path):
+    st.markdown("### 🔊 Interactive Voice Assistant Playback:")
+    st.audio(voice_file_path, format="audio/mp3")
+    st.success(f"Execution complete. Output successfully processed in {selected_lang_name}.")
+    os.remove(voice_file_path)
+else:st.info("Upload a patient laboratory image file to initiate tracking modules.")
