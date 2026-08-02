@@ -220,25 +220,24 @@ with tab2:
                         st.info(insights_text)
 
 # ---------------------------------------------------------------------
-# FIX: Ensure 'analyzer' is declared immediately inside the button logic
+# FIX: Reset the cloud memory file stream pointer using .seek(0)
 # ---------------------------------------------------------------------
 if st.button("🚀 Analyze Report & Synthesize Audio"):
     with st.spinner("Processing medical text data and generating voice file..."):
         
-        # 1. Load the raw uploaded file buffer from RAM into Pillow image format
+        # Add this exact line here to rewind the uploaded file stream
+        uploaded_report.seek(0)
+        
+        # Now Image.open will run flawlessly without choking on empty data
         report_image = Image.open(uploaded_report)
         
-        # 2. INSTANTIATE THE CLASS OBJECT HERE (This defines the missing variable)
+        # The rest of your processing logic remains exactly the same...
         analyzer = LabReportAnalyzer(st.session_state["OPENROUTER_API_KEY"])
-        
-        # 3. Request the OpenRouter Multimodal endpoint for medical insights
         insights_text = analyzer.analyze_report_image(report_image, selected_lang_name)
         
-        # 4. Display the dynamic text breakdown output on the user dashboard
         st.markdown(f"### 📝 Medical Breakdown ({selected_lang_name}):")
         st.info(insights_text)
         
-        # 5. Execute the gTTS accessibility synthesis script 
         voice_file_path = analyzer.text_to_speech(insights_text, target_lang_code)
         
         if voice_file_path and os.path.exists(voice_file_path):
