@@ -37,21 +37,25 @@ class MedicalImageProcessor:
 
 
 # =====================================================================
-# 2. OPENAI LAB REPORT ANALYZER & MULTILINGUAL VOICE CLASS (OOPs)
+# 2. OPENROUTER LAB REPORT ANALYZER & MULTILINGUAL VOICE CLASS (OOPs)
 # =====================================================================
 class LabReportAnalyzer:
     def __init__(self, api_key):
-        """Initializes OpenAI client with user's key"""
-        self.client = OpenAI(api_key=api_key)
+        """Initializes OpenAI client tailored for OpenRouter endpoints"""
+        # OpenRouter requires base_url to route requests properly
+        self.client = OpenAI(
+            base_url="https://openrouter.ai",
+            api_key=api_key,
+        )
 
     def _encode_image_to_base64(self, pillow_image):
-        """Converts PIL Image to base64 string for OpenAI Vision API"""
+        """Converts PIL Image to base64 string for Multimodal API processing"""
         buffered = io.BytesIO()
         pillow_image.save(buffered, format="JPEG")
         return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
     def analyze_report_image(self, report_image, language_name):
-        """Uses OpenAI GPT-4o-mini to analyze report images and translate output"""
+        """Uses OpenRouter's Free Gemini 2.5 Flash model to analyze medical reports"""
         base64_image = self._encode_image_to_base64(report_image)
         
         prompt = f"""
@@ -66,8 +70,13 @@ class LabReportAnalyzer:
         """
         
         try:
+            # We use the free-tier model: google/gemini-2.5-flash
             response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                extra_headers={
+                    "HTTP-Referer": "http://localhost:8501", # Optional site URL for OpenRouter rankings
+                    "X-Title": "Healthcare IT Portal",       # Optional app title for OpenRouter analytics
+                },
+                model="google/gemini-2.5-flash",
                 messages=[
                     {
                         "role": "user",
@@ -81,12 +90,11 @@ class LabReportAnalyzer:
                             }
                         ]
                     }
-                ],
-                max_tokens=1000
+                ]
             )
-            return response.choices[0].message.content
+            return response.choices.message.content
         except Exception as e:
-            return f"OpenAI Cloud Processing Error: {str(e)}"
+            return f"OpenRouter Cloud Processing Error: {str(e)}"
 
     def text_to_speech(self, text, language_code):
         """Converts analyzed medical text summaries into natural speech (.mp3)"""
@@ -106,21 +114,21 @@ class LabReportAnalyzer:
 # 3. STREAMLIT WEB UI CONFIGURATION & NAVIGATION TABS
 # =====================================================================
 st.set_page_config(page_title="Healthcare IT Portal", layout="wide")
-st.title("🏥 Enterprise Cloud-Based Healthcare IT Platform")
-st.write("A comprehensive biomedical portfolio workspace combining clinical imaging, AI diagnostics, and multi-language patient tracking.")
+st.title(" 🏥 Enterprise Cloud-Based Healthcare IT Platform")
+st.write("A comprehensive biomedical portfolio workspace combining clinical imaging, OpenRouter AI diagnostics, and multi-language patient tracking.")
 
 # Session state setup to handle API keys safely across app re-runs
-if "OPENAI_API_KEY" not in st.session_state:
-    st.session_state["OPENAI_API_KEY"] = ""
+if "OPENROUTER_API_KEY" not in st.session_state:
+    st.session_state["OPENROUTER_API_KEY"] = ""
 
 with st.sidebar:
     st.header("🔑 Cloud Configuration")
-    user_key = st.text_input("Enter OpenAI API Key:", type="password", value=st.session_state["OPENAI_API_KEY"])
+    user_key = st.text_input("Enter OpenRouter API Key:", type="password", value=st.session_state["OPENROUTER_API_KEY"])
     if user_key:
-        st.session_state["OPENAI_API_KEY"] = user_key
-        st.success("OpenAI Key activated securely for this session!")
+        st.session_state["OPENROUTER_API_KEY"] = user_key
+        st.success("OpenRouter Key activated securely for this session!")
     else:
-        st.info("Please input an OpenAI API key to enable automated AI tracking features.")
+        st.info("Please input an OpenRouter API key to enable free automated AI tracking features.")
 
 tab1, tab2 = st.tabs(["📸 Medical Image Analyzer", "🧪 AI Lab Report Tracker & Voice Explainer"])
 
@@ -160,11 +168,11 @@ with tab1:
                 st.success("Cloud Execution Successful: Sobel filter applied.")
 
 # ---------------------------------------------------------------------
-# TAB 2: LAB REPORT TRACKER & MULTILINGUAL VOICE EXPLAINER (OPENAI VERSION)
+# TAB 2: LAB REPORT TRACKER & MULTILINGUAL VOICE EXPLAINER (OPENROUTER VERSION)
 # ---------------------------------------------------------------------
 with tab2:
     st.header("Automated Medical Lab Tracker & Voice Assistance Portal")
-    st.write("Track pathology metrics in memory and synthesize multilingual audio briefings using OpenAI GPT-4o-mini.")
+    st.write("Track pathology metrics in memory and synthesize multilingual audio briefings using OpenRouter Free Models.")
 
     languages = {
         "English": "en",
@@ -196,25 +204,20 @@ with tab2:
         if uploaded_report is not None:
             st.image(uploaded_report, caption="Buffered Document Payload", width=280)
             
-            if not st.session_state["OPENAI_API_KEY"]:
-                st.warning("⚠️ Action Required: Please enter your OpenAI API Key in the sidebar configuration to trigger analytics.")
+            if not st.session_state["OPENROUTER_API_KEY"]:
+                st.warning("⚠️ Action Required: Please enter your OpenRouter API Key in the sidebar configuration to trigger analytics.")
             else:
                 if st.button("🚀 Analyze Report & Synthesize Audio"):
                     with st.spinner("Processing medical text data and generating voice file..."):
                         
                         report_image = Image.open(uploaded_report)
-                        analyzer = LabReportAnalyzer(st.session_state["OPENAI_API_KEY"])
+                        analyzer = LabReportAnalyzer(st.session_state["OPENROUTER_API_KEY"])
                         
-                        # Call OpenAI API
+                        # Call OpenRouter API
                         insights_text = analyzer.analyze_report_image(report_image, selected_lang_name)
                         
                         st.markdown(f"### 📝 Medical Breakdown ({selected_lang_name}):")
                         st.info(insights_text)
-                        
-                        # Generate Voice
-                        voice_file_path = analyzer.text_to_speech(insights_text, target_lang_code)
-                        
-                        if voice_file_path and os.path.exists(voice_file_path):
-                            st.markdown("### 🔊 Interactive Voice Assistant Playback:")
-                            st.audio(voice_file_path, format="audio/mp3")
-                            st.success(f"Execution complete. Output successfully processed in {selected_lang_name}.")
+
+# Generate Voice
+voice_file_path = analyzer.text_to_speech(insights_text, target_lang_code)if voice_file_path and os.path.exists(voice_file_path):st.markdown("### 🔊 Interactive Voice Assistant Playback:")st.audio(voice_file_path, format="audio/mp3")st.success(f"Execution complete. Output successfully processed in {selected_lang_name}.")os.remove(voice_file_path)else:st.info("Upload a patient laboratory image file to initiate tracking modules.")
