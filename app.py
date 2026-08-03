@@ -198,7 +198,7 @@ with tab2:
         else:
             st.metric(label="File Storage Status", value="Empty/Idle")
 
-    with col_lab2:
+     with col_lab2:
         st.subheader("🤖 AI Diagnostic & Accessibility Outputs")
         
         if uploaded_report is not None:
@@ -207,41 +207,30 @@ with tab2:
             if not st.session_state["OPENROUTER_API_KEY"]:
                 st.warning("⚠️ Action Required: Please enter your OpenRouter API Key in the sidebar configuration to trigger analytics.")
             else:
-                if st.button("🚀 Analyze Report & Synthesize Audio"):
+                # 🔥 FIX: key="analyze_report_btn" separates this element's internal ID from duplicates
+                if st.button("🚀 Analyze Report & Synthesize Audio", key="analyze_report_btn"):
                     with st.spinner("Processing medical text data and generating voice file..."):
                         
+                        # Rewind memory stream pointer
+                        uploaded_report.seek(0)
                         report_image = Image.open(uploaded_report)
+                        
+                        # Instantiate OpenRouter execution handler
                         analyzer = LabReportAnalyzer(st.session_state["OPENROUTER_API_KEY"])
                         
-                        # Call OpenRouter API
+                        # Request OpenRouter Multimodal translation tracking analytics
                         insights_text = analyzer.analyze_report_image(report_image, selected_lang_name)
                         
                         st.markdown(f"### 📝 Medical Breakdown ({selected_lang_name}):")
                         st.info(insights_text)
-
-# ---------------------------------------------------------------------
-# FIX: Reset the cloud memory file stream pointer using .seek(0)
-# ---------------------------------------------------------------------
-if st.button("🚀 Analyze Report & Synthesize Audio"):
-    with st.spinner("Processing medical text data and generating voice file..."):
-        
-        # Add this exact line here to rewind the uploaded file stream
-        uploaded_report.seek(0)
-        
-        # Now Image.open will run flawlessly without choking on empty data
-        report_image = Image.open(uploaded_report)
-        
-        # The rest of your processing logic remains exactly the same...
-        analyzer = LabReportAnalyzer(st.session_state["OPENROUTER_API_KEY"])
-        insights_text = analyzer.analyze_report_image(report_image, selected_lang_name)
-        
-        st.markdown(f"### 📝 Medical Breakdown ({selected_lang_name}):")
-        st.info(insights_text)
-        
-        voice_file_path = analyzer.text_to_speech(insights_text, target_lang_code)
-        
-        if voice_file_path and os.path.exists(voice_file_path):
-            st.markdown("### 🔊 Interactive Voice Assistant Playback:")
-            st.audio(voice_file_path, format="audio/mp3")
-            st.success(f"Execution complete. Output successfully processed in {selected_lang_name}.")
-            os.remove(voice_file_path)
+                        
+                        # Generate voice file payload
+                        voice_file_path = analyzer.text_to_speech(insights_text, target_lang_code)
+                        
+                        if voice_file_path and os.path.exists(voice_file_path):
+                            st.markdown("### 🔊 Interactive Voice Assistant Playback:")
+                            st.audio(voice_file_path, format="audio/mp3")
+                            st.success(f"Execution complete. Output successfully processed in {selected_lang_name}.")
+                            os.remove(voice_file_path)
+        else:
+            st.info("Upload a patient laboratory image file to initiate tracking modules.")
