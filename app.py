@@ -184,53 +184,38 @@ with tab2:
 
     col_lab1, col_lab2 = st.columns(2)
 
-    with col_lab1:
-        st.subheader("📥 Data Tracking Input")
-        selected_lang_name = st.selectbox("Select Target Explanation Language:", list(languages.keys()))
-        target_lang_code = languages[selected_lang_name]
+            with col_lab2:
+                st.subheader("🤖 AI Diagnostic & Accessibility Outputs")
         
-        uploaded_report = st.file_uploader("Upload a screenshot or photo of lab report:", type=["png", "jpg", "jpeg"], key="lab_uploader")
-        
-        st.subheader("🗄️ Backend Cloud-Database Tracker")
-        if uploaded_report:
-            st.metric(label="File Storage Status", value="Buffered in Cloud RAM")
-            st.metric(label="Simulated SQL Sync State", value="Locked & Awaiting Analytics")
-        else:
-            st.metric(label="File Storage Status", value="Empty/Idle")
-
-     with col_lab2:
-        st.subheader("🤖 AI Diagnostic & Accessibility Outputs")
-        
-        if uploaded_report is not None:
-            st.image(uploaded_report, caption="Buffered Document Payload", width=280)
+            if uploaded_report is not None:
+               st.image(uploaded_report, caption="Buffered Document Payload", width=280)
             
             if not st.session_state["OPENROUTER_API_KEY"]:
-                st.warning("⚠️ Action Required: Please enter your OpenRouter API Key in the sidebar configuration to trigger analytics.")
-            else:
-                # 🔥 FIX: key="analyze_report_btn" separates this element's internal ID from duplicates
-                if st.button("🚀 Analyze Report & Synthesize Audio", key="analyze_report_btn"):
-                    with st.spinner("Processing medical text data and generating voice file..."):
+               st.warning("⚠️ Action Required: Please enter your OpenRouter API Key in the sidebar configuration to trigger analytics.")
+            else
+# 🔥 FIX: key="analyze_report_btn" separates this element's internal ID from duplicates
+            if st.button("🚀 Analyze Report & Synthesize Audio", key="analyze_report_btn"):
+            with st.spinner("Processing medical text data and generating voice file..."):
                         
-                        # Rewind memory stream pointer
-                        uploaded_report.seek(0)
-                        report_image = Image.open(uploaded_report)
+# Rewind memory stream pointer
+             uploaded_report.seek(0)
+             report_image = Image.open(uploaded_report)
                         
-                        # Instantiate OpenRouter execution handler
-                        analyzer = LabReportAnalyzer(st.session_state["OPENROUTER_API_KEY"])
+# Instantiate OpenRouter execution handler
+            analyzer = LabReportAnalyzer(st.session_state["OPENROUTER_API_KEY"])
+# Request OpenRouter Multimodal translation tracking analytics
+            insights_text = analyzer.analyze_report_image(report_image, selected_lang_name)
                         
-                        # Request OpenRouter Multimodal translation tracking analytics
-                        insights_text = analyzer.analyze_report_image(report_image, selected_lang_name)
+            st.markdown(f"### 📝 Medical Breakdown ({selected_lang_name}):")
+            st.info(insights_text)
                         
-                        st.markdown(f"### 📝 Medical Breakdown ({selected_lang_name}):")
-                        st.info(insights_text)
+# Generate voice file payload
+            voice_file_path = analyzer.text_to_speech(insights_text, target_lang_code)
                         
-                        # Generate voice file payload
-                        voice_file_path = analyzer.text_to_speech(insights_text, target_lang_code)
-                        
-                        if voice_file_path and os.path.exists(voice_file_path):
-                            st.markdown("### 🔊 Interactive Voice Assistant Playback:")
-                            st.audio(voice_file_path, format="audio/mp3")
-                            st.success(f"Execution complete. Output successfully processed in {selected_lang_name}.")
-                            os.remove(voice_file_path)
-        else:
-            st.info("Upload a patient laboratory image file to initiate tracking modules.")
+            if voice_file_path and os.path.exists(voice_file_path):
+                st.markdown("### 🔊 Interactive Voice Assistant Playback:")
+                st.audio(voice_file_path, format="audio/mp3")
+                st.success(f"Execution complete. Output successfully processed in {selected_lang_name}.")
+                os.remove(voice_file_path)
+           else:
+               st.info("Upload a patient laboratory image file to initiate tracking modules.")
